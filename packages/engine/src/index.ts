@@ -1,0 +1,6 @@
+export { Clock, ClockDriftError, compare, decode, encode, type Timestamp } from './hlc.js'
+export { Records, type Superseded } from './lww.js'
+export type { DeleteOp, InsertOp, Json, Op, SetOp, VersionVector } from './ops.js'
+export { type Message, type Peer, peer } from './protocol.js'
+export { type Received, Replica } from './replica.js'
+export { Sequence } from './rga.js'
