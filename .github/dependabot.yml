@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      tooling:
+        patterns: ["@biomejs/*", "turbo", "typescript", "vitest"]
+      site:
+        patterns: ["astro", "gsap", "@fontsource*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: docker
+    directory: /apps/relay
+    schedule: { interval: monthly }
+    # Even-numbered Node majors only: odd releases never reach LTS.
+    ignore:
+      - dependency-name: node
+        update-types: [version-update:semver-major]
