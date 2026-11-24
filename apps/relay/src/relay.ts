@@ -1,5 +1,10 @@
-import { ClockDriftError, type Message, Replica } from '@weft/engine'
-import type { OpStore } from './store.js'
+import { ClockDriftError, type Message, type Op, Replica } from '@weft/engine'
+
+/** Anything that can hand back the log and keep appending to it: SQLite here, memory in the demo. */
+export interface Store {
+  load(): Op[]
+  append(ops: readonly Op[]): void
+}
 
 export interface Connection {
   send(msg: Message): void
@@ -11,7 +16,7 @@ export interface Connection {
  * lacks plus its own version vector (so the peer can send what the relay
  * lacks), persists what it learns, and forwards it to everyone else.
  */
-export function createRelay(store: OpStore) {
+export function createRelay(store: Store) {
   const replica = new Replica('relay')
   replica.receive(store.load())
   const peers = new Set<Connection>()
