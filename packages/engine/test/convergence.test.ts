@@ -9,6 +9,9 @@ import { type Op, Replica } from '../src/index.js'
 
 const SITES = ['ana', 'bo', 'cy'] as const
 
+// Long runs (WEFT_RUNS) take a while on a CI runner; the default 5 s is for unit tests.
+const LONG = 180_000
+
 const edit = fc.oneof(
   fc.record({
     kind: fc.constant('set' as const),
@@ -74,62 +77,70 @@ function settle(replicas: Replica[]) {
 }
 
 describe('convergence', () => {
-  it('reaches one state whatever the edits and however they are delivered', () => {
-    fc.assert(
-      fc.property(fc.array(step, { maxLength: 80, size: 'max' }), (steps) => {
-        const { time, replicas } = world()
-        for (const s of steps) {
-          if (s.type === 'tick') {
-            time[s.on] = (time[s.on] ?? 0) + s.by
-          } else if (s.type === 'edit') {
-            const r = replicas[s.on] as Replica
-            const e = s.edit
-            const len = r.text('note').length
-            if (e.kind === 'set') r.set(e.entity, e.field, e.value)
-            else if (e.kind === 'ins')
-              r.insertText('note', Math.min(Math.floor(e.at * (len + 1)), len), e.text)
-            else if (len > 0) r.deleteText('note', Math.floor(e.at * len), e.length)
-          } else if (s.from !== s.to) {
-            const from = replicas[s.from] as Replica
-            const to = replicas[s.to] as Replica
-            const outstanding = from.missingFrom(to.versionVector)
-            let batch: Op[] = outstanding.filter((_, i) => s.keep[i] ?? true)
-            if (s.twice) batch = [...batch, ...batch]
-            to.receive(shuffle(batch, s.order))
+  it(
+    'reaches one state whatever the edits and however they are delivered',
+    () => {
+      fc.assert(
+        fc.property(fc.array(step, { maxLength: 80, size: 'max' }), (steps) => {
+          const { time, replicas } = world()
+          for (const s of steps) {
+            if (s.type === 'tick') {
+              time[s.on] = (time[s.on] ?? 0) + s.by
+            } else if (s.type === 'edit') {
+              const r = replicas[s.on] as Replica
+              const e = s.edit
+              const len = r.text('note').length
+              if (e.kind === 'set') r.set(e.entity, e.field, e.value)
+              else if (e.kind === 'ins')
+                r.insertText('note', Math.min(Math.floor(e.at * (len + 1)), len), e.text)
+              else if (len > 0) r.deleteText('note', Math.floor(e.at * len), e.length)
+            } else if (s.from !== s.to) {
+              const from = replicas[s.from] as Replica
+              const to = replicas[s.to] as Replica
+              const outstanding = from.missingFrom(to.versionVector)
+              let batch: Op[] = outstanding.filter((_, i) => s.keep[i] ?? true)
+              if (s.twice) batch = [...batch, ...batch]
+              to.receive(shuffle(batch, s.order))
+            }
           }
-        }
 
-        settle(replicas)
-        const [a, ...rest] = replicas as [Replica, ...Replica[]]
-        for (const r of rest) {
-          expect(r.digest()).toBe(a.digest())
-          expect(r.text('note')).toBe(a.text('note'))
-          expect(r.pendingCount).toBe(0)
-        }
-      }),
-      { numRuns: Number(process.env.WEFT_RUNS ?? 1500) },
-    )
-  })
-
-  it('behaves exactly like a string when there is only one writer', () => {
-    fc.assert(
-      fc.property(fc.array(edit, { maxLength: 120, size: 'max' }), (edits) => {
-        const r = new Replica('solo', { now: () => 1 })
-        let model = ''
-        for (const e of edits) {
-          if (e.kind === 'ins') {
-            const at = Math.min(Math.floor(e.at * (model.length + 1)), model.length)
-            r.insertText('note', at, e.text)
-            model = model.slice(0, at) + e.text + model.slice(at)
-          } else if (e.kind === 'del' && model.length) {
-            const at = Math.floor(e.at * model.length)
-            r.deleteText('note', at, e.length)
-            model = model.slice(0, at) + model.slice(at + e.length)
+          settle(replicas)
+          const [a, ...rest] = replicas as [Replica, ...Replica[]]
+          for (const r of rest) {
+            expect(r.digest()).toBe(a.digest())
+            expect(r.text('note')).toBe(a.text('note'))
+            expect(r.pendingCount).toBe(0)
           }
-        }
-        expect(r.text('note')).toBe(model)
-      }),
-      { numRuns: 800 },
-    )
-  })
+        }),
+        { numRuns: Number(process.env.WEFT_RUNS ?? 1500) },
+      )
+    },
+    LONG,
+  )
+
+  it(
+    'behaves exactly like a string when there is only one writer',
+    () => {
+      fc.assert(
+        fc.property(fc.array(edit, { maxLength: 120, size: 'max' }), (edits) => {
+          const r = new Replica('solo', { now: () => 1 })
+          let model = ''
+          for (const e of edits) {
+            if (e.kind === 'ins') {
+              const at = Math.min(Math.floor(e.at * (model.length + 1)), model.length)
+              r.insertText('note', at, e.text)
+              model = model.slice(0, at) + e.text + model.slice(at)
+            } else if (e.kind === 'del' && model.length) {
+              const at = Math.floor(e.at * model.length)
+              r.deleteText('note', at, e.length)
+              model = model.slice(0, at) + model.slice(at + e.length)
+            }
+          }
+          expect(r.text('note')).toBe(model)
+        }),
+        { numRuns: 800 },
+      )
+    },
+    LONG,
+  )
 })
