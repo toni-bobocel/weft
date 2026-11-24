@@ -6,10 +6,15 @@ interface Cell {
   ts: Timestamp
 }
 
-/** What a concurrent write lost to, so the UI can say so instead of guessing. */
+/**
+ * A write from another node met an existing value. `replaced`: the incoming
+ * write was newer and took over. `ignored`: it arrived older than what is
+ * already here, which only happens when two writes were concurrent.
+ */
 export interface Superseded {
   entity: string
   field: string
+  outcome: 'replaced' | 'ignored'
   kept: Cell
   dropped: Cell
 }
@@ -33,9 +38,21 @@ export class Records {
       fields.set(op.field, incoming)
       return current.ts.node === op.ts.node
         ? undefined
-        : { entity: op.entity, field: op.field, kept: incoming, dropped: current }
+        : {
+            entity: op.entity,
+            field: op.field,
+            outcome: 'replaced',
+            kept: incoming,
+            dropped: current,
+          }
     }
-    return { entity: op.entity, field: op.field, kept: current, dropped: incoming }
+    return {
+      entity: op.entity,
+      field: op.field,
+      outcome: 'ignored',
+      kept: current,
+      dropped: incoming,
+    }
   }
 
   get(entity: string): Record<string, Json> | undefined {

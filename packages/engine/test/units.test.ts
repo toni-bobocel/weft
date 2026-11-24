@@ -64,7 +64,7 @@ describe('last-writer-wins records', () => {
     expect(x.digest()).toBe(y.digest())
   })
 
-  it('reports what a concurrent write lost to', () => {
+  it('says whether an incoming write replaced the value or arrived too old', () => {
     const a = new Replica('a', { now: fixed(100) })
     const b = new Replica('b', { now: fixed(200) })
     a.set('issue', 'status', 'todo')
