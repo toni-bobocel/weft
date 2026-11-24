@@ -2,68 +2,63 @@ import { gsap } from 'gsap'
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { World } from '../app'
-import { BLOCKS } from '../glow'
+import { linesOf } from '../glow'
 
 gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin)
 
 /**
- * A long read where the headlines bend as they pass: they enter tilted back
- * and stretched narrow, stand up straight at the reading line, and lean
- * away as they leave. The cloud turns a little with every chapter.
+ * A long read. Headlines come up from under the surface curled and soft,
+ * lie flat at the reading line, and curl away again as they leave; the
+ * cloud turns a little with every chapter.
  */
-export function enginePage({ nebula }: World) {
+export function enginePage({ stage }: World) {
   const chapters = [...document.querySelectorAll<HTMLElement>('[data-chapter]')]
   const mark = document.querySelector('[data-mark]') as HTMLElement
   const progress = document.querySelector('[data-progress]') as HTMLElement
 
-  nebula.to({ dim: 0.2, zoom: 5.6, yaw: -0.4 })
+  stage.to({ dim: 0.25, zoom: 5.6, yaw: -0.4 })
   window.scrollTo(0, 0)
 
   chapters.forEach((chapter, i) => {
-    const lines = chapter.querySelectorAll<HTMLElement>('.glow .ln')
+    const states = linesOf(stage, chapter).map((l) => l.state)
     gsap
       .timeline({
-        scrollTrigger: { trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: 0.8 },
+        scrollTrigger: { trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: 1.2 },
       })
       .fromTo(
-        lines,
+        states,
+        { tiltX: 0.9, bend: 0.22, blur: 9, opacity: 0, stretch: 0.86, dy: 50 },
         {
-          rotationX: 55,
-          rotationY: -18,
-          fontVariationSettings: "'wdth' 60",
-          filter: 'blur(8px)',
-          yPercent: 40,
-        },
-        {
-          rotationX: 0,
-          rotationY: 0,
-          fontVariationSettings: "'wdth' 112",
-          filter: 'blur(0px)',
-          yPercent: 0,
-          stagger: 0.08,
-          ease: 'power2.out',
+          tiltX: 0,
+          bend: 0,
+          blur: 0,
+          opacity: 1,
+          stretch: 1,
+          dy: 0,
+          stagger: 0.07,
+          ease: 'sine.out',
           duration: 1,
         },
       )
       .to(
-        lines,
+        states,
         {
-          rotationX: -40,
-          rotationY: 14,
-          filter: 'blur(6px)',
-          fontVariationSettings: "'wdth' 80",
-          stagger: 0.08,
-          ease: 'power2.in',
+          tiltX: -0.7,
+          bend: -0.18,
+          blur: 7,
+          opacity: 0.15,
+          stagger: 0.07,
+          ease: 'sine.in',
           duration: 1,
         },
-        '+=0.6',
+        '+=0.7',
       )
 
     gsap.from(chapter.querySelectorAll('.kv tr, .prose, .records li, .ghosts div'), {
       autoAlpha: 0,
-      y: 24,
-      stagger: 0.05,
-      duration: 0.9,
+      y: 18,
+      stagger: 0.06,
+      duration: 1.6,
       ease: 'expo.out',
       scrollTrigger: { trigger: chapter, start: 'top 55%' },
     })
@@ -75,10 +70,10 @@ export function enginePage({ nebula }: World) {
       onToggle: ({ isActive }) => {
         if (!isActive) return
         gsap.to(mark, {
-          duration: 0.6,
-          scrambleText: { text: chapter.dataset.chapter ?? '', chars: BLOCKS },
+          duration: 0.8,
+          scrambleText: { text: chapter.dataset.chapter ?? '', chars: 'lowerCase', speed: 0.5 },
         })
-        nebula.to({ yaw: -0.4 + i * 0.35, zoom: 5.6 - (i % 2) * 0.6 }, 2.4)
+        stage.to({ yaw: -0.4 + i * 0.3, zoom: 5.6 - (i % 2) * 0.5 }, 3.2)
       },
     })
   })
@@ -89,13 +84,6 @@ export function enginePage({ nebula }: World) {
     onUpdate: ({ progress: p }) => gsap.set(progress, { scaleY: p }),
   })
 
-  for (const ln of chapters[0]?.querySelectorAll<HTMLElement>('.glow .ln') ?? []) {
-    gsap.to(ln, {
-      duration: 1.4,
-      delay: 0.3,
-      scrambleText: { text: ln.dataset.text ?? '', chars: BLOCKS, speed: 0.6 },
-    })
-  }
   return () => {
     for (const t of ScrollTrigger.getAll()) t.kill()
   }

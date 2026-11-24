@@ -3,38 +3,38 @@ import Frame from '../layouts/Frame.astro'
 import { SCENARIOS } from '../scripts/playground/scenarios'
 ---
 
-<Frame title="Weft — demo" page="demo" hint="Scroll to turn, click the facing scenario">
-  <div class="drum" aria-label="Scenarios">
-    <div class="drum__axis" data-axis>
-      {
-        // Three laps of the list so the drum is full above and below the facing title.
-        [0, 1, 2].flatMap((lap) =>
-          SCENARIOS.map((s) => (
-            <button class="drum__item" type="button" aria-hidden={lap === 1 ? undefined : 'true'} tabindex="-1">
+<Frame title="Weft, the demo" page="demo" hint="Scroll to turn the list. Click the one facing you to run it.">
+  <ul class="drum-list" data-drum aria-label="Scenarios">
+    {
+      // Three laps of the list so the drum is full above and below the title facing you.
+      [0, 1, 2].flatMap((lap) =>
+        SCENARIOS.map((s) => (
+          <li>
+            <button type="button" tabindex="-1" aria-hidden={lap === 1 ? undefined : 'true'}>
               {s.title}
             </button>
-          )),
-        )
-      }
-    </div>
-  </div>
+          </li>
+        )),
+      )
+    }
+  </ul>
+  <div class="drum-hit" data-hit aria-hidden="true"></div>
 
-  <span class="tag mono" data-tag aria-hidden="true"></span>
-  <div class="preview" data-preview aria-hidden="true">
-    <span class="mono dim" data-who></span>
+  <div class="whisper" data-whisper aria-live="polite">
+    <span class="mono" data-tag></span>
     <p data-blurb></p>
   </div>
 
   <section class="play" data-play aria-label="Live bench">
     <header class="play__head">
       <div>
-        <span class="mono dim">Live bench · real engine, real relay code, simulated network</span>
+        <span class="mono dim">The real engine and the relay's own code, on a pretend network</span>
         <h1 class="play__title" data-title></h1>
         <p class="play__story" data-story></p>
       </div>
       <div class="play__actions">
-        <button class="btn mono" type="button" data-replay>Run again <span>↺</span></button>
-        <button class="btn mono" type="button" data-close>Scenarios <span>→</span></button>
+        <button class="act" type="button" data-replay>run it again <span class="arrow">↺</span></button>
+        <button class="act" type="button" data-close>back to the list <span class="arrow">→</span></button>
       </div>
     </header>
     <div class="bench" data-bench></div>

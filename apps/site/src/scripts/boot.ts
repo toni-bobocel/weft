@@ -6,10 +6,10 @@ gsap.registerPlugin(TextPlugin)
 
 const LINES = [
   'toni@weft:~$ ./sync --boot',
-  '[ OK ] HYBRID LOGICAL CLOCK',
-  '[ OK ] LAST-WRITER-WINS RECORDS',
-  '[ OK ] RGA SEQUENCE',
-  '[ OK ] VERSION VECTORS',
+  '[ ok ] clock, hybrid',
+  '[ ok ] records, last write wins',
+  '[ ok ] text, letter by letter',
+  '[ ok ] sync, only what is missing',
 ]
 
 const pad = (n: number, w = 2) => String(n).padStart(w, '0')
@@ -19,7 +19,7 @@ const pad = (n: number, w = 2) => String(n).padStart(w, '0')
  * the engine; its encoded timestamp is what every op on this page carries.
  */
 export function boot(root: HTMLElement, onEnter: () => void) {
-  const clock = new Clock('this-tab')
+  const clock = new Clock('you')
   const date = root.querySelector('[data-date]') as HTMLElement
   const ms = root.querySelector('[data-ms]') as HTMLElement
   const hlc = root.querySelector('[data-hlc]') as HTMLElement
@@ -68,12 +68,12 @@ export function boot(root: HTMLElement, onEnter: () => void) {
     gsap
       .timeline({ onComplete: () => root.remove() })
       .to(root.querySelector('.boot__center'), {
-        scale: 1.08,
         autoAlpha: 0,
-        duration: 0.45,
-        ease: 'power2.in',
+        filter: 'blur(12px)',
+        duration: 1.1,
+        ease: 'sine.in',
       })
-      .to(root, { autoAlpha: 0, duration: 0.6 }, 0.25)
+      .to(root, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 0.4)
     onEnter()
   }
   const onKey = (e: KeyboardEvent) => {

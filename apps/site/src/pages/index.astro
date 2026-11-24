@@ -1,39 +1,25 @@
 ---
 import Glow from '../components/Glow.astro'
 import Frame from '../layouts/Frame.astro'
-
-const captions = [
-  { text: 'Hybrid logical clock', sub: ['Ordering', 'causal, readable'], style: 'top:23%;left:58%' },
-  { text: 'RGA sequence', sub: ['Text', 'words never interleave'], style: 'top:72%;left:50%' },
-  { text: 'Version vectors', sub: ['Sync', 'deltas only'], style: 'top:28%;left:76%' },
-]
 ---
 
-<Frame title="Weft — one state, many devices" page="main" hint="Hold to partition, release to merge">
+<Frame title="Weft, a small sync engine" page="main" hint="Hold the mouse down to pull the two copies apart. Let go and they merge.">
   <section class="home">
-    <p class="ident">weft<span>local-first sync engine</span></p>
+    <p class="ident">weft<span>a small sync engine, written to learn</span></p>
 
-    <p class="caption mono dim" style="top:26%;left:var(--inset)">
-      Offline first,<br />the server is<br />just another peer
+    <p class="caption mono" style="top:24%;left:56%" data-caption>
+      <b>Clock</b><br />hybrid, so order holds<br />when wall clocks lie
+    </p>
+    <p class="caption mono" style="top:69%;left:24%" data-caption>
+      <b>Text</b><br />two people can type<br />in the same spot
     </p>
 
-    {
-      captions.map((c) => (
-        <p class="caption mono" style={c.style} data-caption>
-          <span data-text={c.text}>{c.text}</span>
-          <br />
-          <span class="dim">{c.sub[0]}</span>
-          <br />
-          <span class="dim">{c.sub[1]}</span>
-        </p>
-      ))
-    }
-
-    <Glow tag="h1" lines={['Every device edits', 'offline, and still', 'agrees.']} />
+    <Glow tag="h1" lines={['Offline on', 'every device,', 'and still in sync.']} />
 
     <p class="lede">
-      <b>A sync engine written from scratch.</b> Hand-rolled CRDTs, a two-message protocol and a relay that is only another
-      replica. Twenty thousand generated histories, one state.
+      I wanted to understand what apps like Linear or Figma do when you lose signal, so I wrote a sync engine from scratch.
+      It's about five hundred lines, and the tests throw thousands of broken networks at it to check that every copy ends up
+      the same.
     </p>
   </section>
 </Frame>

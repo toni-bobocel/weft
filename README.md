@@ -104,12 +104,14 @@ replica.insertText('note', 0, 'hello')
 
 ![Scenarios](docs/img/scenarios.jpg)
 
+![Water](docs/img/water.jpg)
+
 ## Layout
 
 ```
 packages/engine/   hlc, lww, rga, replica, protocol, property tests
 apps/relay/        websocket server, sqlite store, socket tests, Dockerfile
-apps/site/         demo (Astro, three.js, GSAP)
+apps/site/         demo (Astro, three.js, GSAP, Web Audio)
 docs/adr/          architecture decision records
 ```
 

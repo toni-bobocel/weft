@@ -5,37 +5,37 @@ import Frame from '../layouts/Frame.astro'
 const repo = 'https://github.com/toni-bobocel/weft'
 ---
 
-<Frame title="Weft — use it" page="use">
-  <p class="ident">use it<span>open source, MIT</span></p>
+<Frame title="Weft, using it" page="use">
+  <p class="ident">use it<span>it's open source, MIT</span></p>
 
   <section class="use">
-    <Glow tag="h1" lines={['Got state that', 'has to live on', 'every device?']} />
+    <Glow tag="h1" lines={['Got data that', 'needs to live on', 'more than one device?']} />
 
     <div class="choices">
       <div>
-        <span class="mono">What are you syncing</span>
-        <div data-group="shape">
-          <button class="chip mono" type="button" data-value="tasks" aria-pressed="true">Tasks</button>
-          <button class="chip mono" type="button" data-value="notes" aria-pressed="false">Notes</button>
-          <button class="chip mono" type="button" data-value="forms" aria-pressed="false">Forms</button>
+        <span class="mono dim">What you're syncing</span>
+        <div class="options" data-group="shape">
+          <button class="act" type="button" data-value="tasks" aria-pressed="true">tasks</button>
+          <button class="act" type="button" data-value="notes" aria-pressed="false">notes</button>
+          <button class="act" type="button" data-value="forms" aria-pressed="false">forms</button>
         </div>
       </div>
       <div>
-        <span class="mono">Over</span>
-        <div data-group="transport">
-          <button class="chip mono" type="button" data-value="websocket" aria-pressed="true">WebSocket relay</button>
-          <button class="chip mono" type="button" data-value="broadcast" aria-pressed="false">BroadcastChannel</button>
-          <button class="chip mono" type="button" data-value="memory" aria-pressed="false">In memory</button>
+        <span class="mono dim">Between</span>
+        <div class="options" data-group="transport">
+          <button class="act" type="button" data-value="websocket" aria-pressed="true">devices, through a relay</button>
+          <button class="act" type="button" data-value="broadcast" aria-pressed="false">browser tabs</button>
+          <button class="act" type="button" data-value="memory" aria-pressed="false">two objects in memory</button>
         </div>
       </div>
     </div>
 
     <div class="contact">
-      <a class="repo" href={repo}>github.com/toni-bobocel/weft <span>↗</span></a>
+      <a class="act repo" href={repo}>github.com/toni-bobocel/weft <span class="arrow">↗</span></a>
       <pre class="snippet mono" data-snippet></pre>
-      <div class="contact__buttons">
-        <a class="btn mono" href={repo}><span>Read the source<small>engine, relay, tests, ADRs</small></span><span>↗</span></a>
-        <button class="btn mono" type="button" data-copy><span>Copy snippet<small>built from your choices</small></span><span>→</span></button>
+      <div class="contact__links">
+        <a class="act" href={repo}>read the code <span class="arrow">↗</span></a>
+        <button class="act" type="button" data-copy><span data-copy-label>copy this snippet</span> <span class="arrow">→</span></button>
       </div>
     </div>
   </section>

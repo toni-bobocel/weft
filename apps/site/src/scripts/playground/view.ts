@@ -1,9 +1,6 @@
 import { gsap } from 'gsap'
-import { TextPlugin } from 'gsap/TextPlugin'
 import type { Act, Scenario } from './scenarios'
 import { type Device, type Packet, TASKS, World } from './world'
-
-gsap.registerPlugin(TextPlugin)
 
 const STATUSES = ['todo', 'doing', 'done']
 const pad = (n: number, w = 2) => String(n).padStart(w, '0')
@@ -31,27 +28,26 @@ export function stage(root: HTMLElement, scenario: Scenario) {
   const relayEl = document.createElement('div')
   relayEl.className = 'relay'
   relayEl.innerHTML =
-    '<span class="mono dim">relay</span><b>one more replica</b><span class="mono dim" data-relay-state></span>'
+    '<span class="mono dim">relay</span><b>just another copy</b><span class="mono dim" data-relay-state></span>'
   bench.append(relayEl)
 
   const log = (line: string) => {
     const li = document.createElement('li')
-    li.className = 'mono'
     li.textContent = line
     journal.prepend(li)
     while (journal.children.length > 4) journal.lastElementChild?.remove()
-    gsap.from(li, { autoAlpha: 0, x: -10, duration: 0.4 })
+    gsap.from(li, { autoAlpha: 0, y: 6, duration: 1, ease: 'sine.out' })
   }
 
   const tweens = new Set<gsap.core.Animation>()
   const world = new World(scenario.devices, {
     ship: (packet, deliver) => tweens.add(fly(packet, deliver)),
     superseded: (device, s) => {
-      const who = (c: typeof s.kept) => `"${c.value}" (${c.ts.node} ${clock(c.ts.wall)})`
+      const who = (c: typeof s.kept) => `"${c.value}" from the ${c.ts.node} at ${clock(c.ts.wall)}`
       log(
         s.outcome === 'replaced'
-          ? `${device}: ${who(s.kept)} replaced ${who(s.dropped)}`
-          : `${device}: kept ${who(s.kept)}, ignored older ${who(s.dropped)}`,
+          ? `On the ${device}, ${who(s.kept)} replaced ${who(s.dropped)}.`
+          : `On the ${device}, ${who(s.kept)} stayed; ${who(s.dropped)} was older, so it lost.`,
       )
     },
     note: log,
@@ -105,7 +101,7 @@ export function stage(root: HTMLElement, scenario: Scenario) {
         x: to.x,
         y: to.y,
         duration: packet.latencyMs / 1000,
-        ease: 'power1.inOut',
+        ease: 'sine.inOut',
         onComplete: () => {
           dot.remove()
           deliver()
@@ -120,11 +116,11 @@ export function stage(root: HTMLElement, scenario: Scenario) {
     layoutWires()
     const same = world.converged()
     verdict.textContent = same
-      ? `Converged · ${world.relay.replica.digest().slice(0, 12)}`
-      : `Diverged · ${new Set(world.devices.map((d) => d.replica.digest())).size} states`
+      ? `In sync · ${world.relay.replica.digest().slice(0, 8)}`
+      : `Out of sync · ${new Set(world.devices.map((d) => d.replica.digest())).size} versions`
     verdict.classList.toggle('is-same', same)
     ;(relayEl.querySelector('[data-relay-state]') as HTMLElement).textContent =
-      `${world.relay.replica.opCount} ops · ${world.relay.peers} peers`
+      `${world.relay.replica.opCount} edits · ${world.relay.peers} connected`
   }
 
   const act: Act = {
@@ -167,12 +163,20 @@ export function stage(root: HTMLElement, scenario: Scenario) {
 
   for (const d of world.devices) d.replica.subscribe(() => refresh())
 
-  // The scripted run. Narration types itself; the user can take over at any time.
+  // The scripted run. The narration fades from line to line; you can take over any time.
   const script = gsap.timeline({ delay: 0.5 })
   for (const step of scenario.steps) {
     script.add(() => {
-      if (step.say)
-        gsap.to(story, { duration: step.say.length * 0.014, text: step.say, ease: 'none' })
+      if (step.say) {
+        const say = step.say
+        gsap
+          .timeline()
+          .to(story, { autoAlpha: 0, duration: 0.35, ease: 'sine.in' })
+          .add(() => {
+            story.textContent = say
+          })
+          .to(story, { autoAlpha: 1, duration: 0.9, ease: 'sine.out' })
+      }
       step.run?.(world, act)
     })
     script.to({}, { duration: step.wait })
@@ -205,16 +209,16 @@ function panel(device: Device, world: World, index: number) {
   el.innerHTML = `
     <div class="device__head">
       <span class="device__name">${device.name}</span>
-      <button class="chip mono" type="button" data-online></button>
+      <button class="toggle" type="button" data-online></button>
     </div>
     <ul class="tasks">${TASKS.map(
       (t) =>
-        `<li class="task" data-task="${t}"><input aria-label="Task title" /><button class="chip mono" type="button" data-status></button></li>`,
+        `<li class="task" data-task="${t}"><input aria-label="Task title" /><button class="status" type="button" data-status></button></li>`,
     ).join('')}</ul>
     <textarea class="note" aria-label="Shared note on ${device.name}" spellcheck="false"></textarea>
     <div class="device__state mono">
-      <span>vector</span><b data-vv></b>
-      <span>ops</span><b data-ops></b>
+      <span>seen</span><b data-vv></b>
+      <span>edits</span><b data-ops></b>
       <span>clock</span><b data-clock></b>
       <span>digest</span><b data-digest></b>
     </div>`
@@ -257,7 +261,7 @@ function panel(device: Device, world: World, index: number) {
   })
 
   function render() {
-    online.textContent = device.rejected ? 'rejected' : device.online ? 'online' : 'offline'
+    online.textContent = device.rejected ? 'turned away' : device.online ? 'online' : 'offline'
     online.classList.toggle('is-online', device.online)
     online.classList.toggle('is-offline', !device.online)
     for (const li of el.querySelectorAll<HTMLElement>('[data-task]')) {
@@ -286,9 +290,9 @@ function panel(device: Device, world: World, index: number) {
       Object.entries(vv)
         .filter(([s]) => s !== 'seed')
         .map(([s, n]) => `${s}:${n}`)
-        .join(' ') || '—'
+        .join('  ') || 'nothing yet'
     ;(el.querySelector('[data-ops]') as HTMLElement).textContent =
-      `${replica.opCount} · sent ${device.sent} · got ${device.received}${replica.pendingCount ? ` · ${replica.pendingCount} parked` : ''}`
+      `${replica.opCount}, sent ${device.sent}, got ${device.received}${replica.pendingCount ? `, ${replica.pendingCount} waiting` : ''}`
     const last = replica.clock.last
     ;(el.querySelector('[data-clock]') as HTMLElement).textContent =
       `${clock(last.wall)}${device.skewMs ? ` (${device.skewMs > 0 ? '+' : ''}${Math.round(device.skewMs / 1000)}s)` : ''}`

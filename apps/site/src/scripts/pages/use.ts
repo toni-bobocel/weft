@@ -1,7 +1,7 @@
 import { gsap } from 'gsap'
 import { TextPlugin } from 'gsap/TextPlugin'
 import type { World } from '../app'
-import { reveal, tilt } from '../glow'
+import { linesOf, reveal, tilt } from '../glow'
 
 gsap.registerPlugin(TextPlugin)
 
@@ -29,15 +29,16 @@ type Shape = keyof typeof SHAPES
 type Transport = keyof typeof TRANSPORTS
 
 /** The choices write the snippet: the same two calls work over any transport. */
-export function usePage({ nebula }: World) {
+export function usePage({ stage }: World) {
   const root = document.querySelector('.use') as HTMLElement
   const snippet = root.querySelector('[data-snippet]') as HTMLElement
   const copy = root.querySelector('[data-copy]') as HTMLButtonElement
   const choice = { shape: 'tasks' as Shape, transport: 'websocket' as Transport }
 
-  nebula.to({ dim: 0.1, zoom: 5.2, yaw: 0.9 })
-  reveal(root, 0.15)
-  const untilt = tilt(root)
+  stage.to({ dim: 0.1, zoom: 5.2, yaw: 0.9 })
+  const lines = linesOf(stage, root)
+  reveal(lines, 0.2)
+  const untilt = tilt(lines)
   gsap.from(root.querySelectorAll('.choices > div, .contact > *'), {
     autoAlpha: 0,
     y: 20,
@@ -68,9 +69,9 @@ export function usePage({ nebula }: World) {
 
   for (const group of root.querySelectorAll<HTMLElement>('[data-group]')) {
     group.addEventListener('click', (e) => {
-      const chip = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip')
+      const chip = (e.target as HTMLElement).closest<HTMLButtonElement>('.act')
       if (!chip) return
-      for (const c of group.querySelectorAll('.chip'))
+      for (const c of group.querySelectorAll('.act'))
         c.setAttribute('aria-pressed', String(c === chip))
       if (group.dataset.group === 'shape') choice.shape = chip.dataset.value as Shape
       else choice.transport = chip.dataset.value as Transport
@@ -80,12 +81,10 @@ export function usePage({ nebula }: World) {
 
   copy.addEventListener('click', async () => {
     await navigator.clipboard?.writeText(code())
-    const label = copy.querySelector('span') as HTMLElement
-    const before = label.innerHTML
-    gsap.to(label, { duration: 0.4, text: 'Copied' })
-    gsap.delayedCall(1.6, () => {
-      label.innerHTML = before
-    })
+    const label = copy.querySelector('[data-copy-label]') as HTMLElement
+    const before = label.textContent
+    gsap.to(label, { duration: 0.6, text: 'copied, enjoy' })
+    gsap.delayedCall(2, () => gsap.to(label, { duration: 0.6, text: before ?? '' }))
   })
 
   return untilt
