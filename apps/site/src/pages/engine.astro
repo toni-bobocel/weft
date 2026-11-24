@@ -1,0 +1,141 @@
+---
+import Glow from '../components/Glow.astro'
+import Frame from '../layouts/Frame.astro'
+
+const repo = 'https://github.com/toni-bobocel/weft'
+
+const chapters = [
+  {
+    mark: 'Clock',
+    lines: ['Order without', 'a master', 'clock.'],
+    rows: [
+      ['Clock', 'Hybrid logical'],
+      ['Tie-break', 'Node id'],
+      ['Encoding', 'Fixed-width base 36'],
+      ['Drift guard', '60 s, then 4400'],
+    ],
+    prose:
+      '<b>Physical time when machines agree, a counter when they do not.</b> If one edit happened before another, its timestamp is smaller, whatever the wall clocks say. Ids sort as plain strings, so the inspector can show when a write was made, not only its rank.',
+  },
+  {
+    mark: 'Text',
+    lines: ['Text that merges', 'letter', 'by letter.'],
+    rows: [
+      ['Structure', 'RGA sequence'],
+      ['Anchor', 'Previous character id'],
+      ['Siblings', 'Newest first'],
+      ['Deletes', 'Tombstones'],
+    ],
+    prose:
+      '<b>Every character remembers what it was typed after.</b> Because ids follow causality, the integration loop is one comparison, and two words typed at the same spot land whole, side by side. A letter typed into a word someone else deleted keeps its anchor and survives.',
+  },
+  {
+    mark: 'Sync',
+    lines: ['Send only', 'what is', 'missing.'],
+    rows: [
+      ['State', 'Version vector'],
+      ['Messages', 'hello, ops'],
+      ['Delivery', 'Any order, any count'],
+      ['Server', 'Another replica'],
+    ],
+    prose:
+      '<b>Each op carries a gapless number per device.</b> A version vector says exactly what a replica holds, so reconnecting after a week sends the week, not the database. Duplicates are dropped, gaps wait for what they depend on, and the relay is a replica that happens never to edit.',
+  },
+  {
+    mark: 'Proof',
+    lines: ['Proven,', 'not', 'argued.'],
+    rows: [
+      ['Generator', 'fast-check'],
+      ['Histories', '1,500 per run, 15,000 in CI'],
+      ['Damage', 'Drop, duplicate, reorder, skew'],
+      ['Assertion', 'Byte-identical digests'],
+    ],
+    prose:
+      '<b>Convergence is not a claim in a README.</b> A property test writes thousands of histories with concurrent edits, clocks that jump backwards and a network that loses and repeats packets, then requires every replica to hold the same bytes. It found one real bug on its second try.',
+  },
+]
+
+const records = [
+  ['Write the CRDTs instead of adopting Yjs or Automerge', '0001-own-the-crdt.md'],
+  ['Hybrid logical clocks for every timestamp', '0002-hybrid-logical-clocks.md'],
+  ['RGA for text, tombstones kept', '0003-rga-for-text.md'],
+  ['Sync an op log with version vectors; the server is a replica', '0004-op-log-and-version-vectors.md'],
+]
+
+const stack = [
+  ['TypeScript', 'engine, relay, site'],
+  ['No dependencies', 'in the engine'],
+  ['node:sqlite', 'relay op log'],
+  ['ws', 'relay transport'],
+  ['fast-check', 'property tests'],
+  ['Vitest', 'test runner'],
+  ['three.js', 'this cloud'],
+  ['GSAP', 'every motion here'],
+]
+---
+
+<Frame title="Weft — engine" page="engine">
+  <p class="ident">engine<span>how it holds together</span></p>
+
+  <div class="section-mark mono" aria-hidden="true">
+    <i><b data-progress></b></i>
+    <span data-mark>Clock</span>
+  </div>
+
+  <article class="read">
+    {
+      chapters.map((c) => (
+        <section class="chapter" data-chapter={c.mark}>
+          <Glow lines={c.lines} />
+          <table class="kv mono">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {c.rows.map(([k, v]) => (
+                <tr>
+                  <th>{k}</th>
+                  <td>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="prose" set:html={c.prose} />
+        </section>
+      ))
+    }
+
+    <section class="chapter" data-chapter="Records">
+      <Glow lines={['Decisions', 'on the', 'record.']} />
+      <ul class="records">
+        {
+          records.map(([title, file]) => (
+            <li>
+              <a href={`${repo}/blob/main/docs/adr/${file}`}>
+                <b>{title}</b>
+                <span class="mono dim">↗</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="chapter" data-chapter="Stack">
+      <Glow lines={['Built on', 'very little', 'on purpose.']} />
+      <div class="ghosts">
+        {
+          stack.map(([name, role]) => (
+            <div>
+              <b>{name}</b>
+              <span class="mono dim">{role}</span>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</Frame>

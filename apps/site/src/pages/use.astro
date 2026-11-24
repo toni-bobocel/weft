@@ -1,0 +1,42 @@
+---
+import Glow from '../components/Glow.astro'
+import Frame from '../layouts/Frame.astro'
+
+const repo = 'https://github.com/toni-bobocel/weft'
+---
+
+<Frame title="Weft — use it" page="use">
+  <p class="ident">use it<span>open source, MIT</span></p>
+
+  <section class="use">
+    <Glow tag="h1" lines={['Got state that', 'has to live on', 'every device?']} />
+
+    <div class="choices">
+      <div>
+        <span class="mono">What are you syncing</span>
+        <div data-group="shape">
+          <button class="chip mono" type="button" data-value="tasks" aria-pressed="true">Tasks</button>
+          <button class="chip mono" type="button" data-value="notes" aria-pressed="false">Notes</button>
+          <button class="chip mono" type="button" data-value="forms" aria-pressed="false">Forms</button>
+        </div>
+      </div>
+      <div>
+        <span class="mono">Over</span>
+        <div data-group="transport">
+          <button class="chip mono" type="button" data-value="websocket" aria-pressed="true">WebSocket relay</button>
+          <button class="chip mono" type="button" data-value="broadcast" aria-pressed="false">BroadcastChannel</button>
+          <button class="chip mono" type="button" data-value="memory" aria-pressed="false">In memory</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact">
+      <a class="repo" href={repo}>github.com/toni-bobocel/weft <span>↗</span></a>
+      <pre class="snippet mono" data-snippet></pre>
+      <div class="contact__buttons">
+        <a class="btn mono" href={repo}><span>Read the source<small>engine, relay, tests, ADRs</small></span><span>↗</span></a>
+        <button class="btn mono" type="button" data-copy><span>Copy snippet<small>built from your choices</small></span><span>→</span></button>
+      </div>
+    </div>
+  </section>
+</Frame>
